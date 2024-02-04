@@ -1,113 +1,155 @@
-import Image from "next/image";
+// components/TodoList.tsx
+"use client";
+import React, { useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEdit } from "@fortawesome/free-solid-svg-icons";
+import { faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faFloppyDisk } from "@fortawesome/free-solid-svg-icons";
+import { faXmark } from "@fortawesome/free-solid-svg-icons";
+import ClockComponent from "./components/ClockComponent";
 
-export default function Home() {
+interface Todo {
+  id: number;
+  title: string;
+  completed: boolean;
+}
+
+const TodoList: React.FC = () => {
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [newTodo, setNewTodo] = useState<string>("");
+  const [editingTodoId, setEditingTodoId] = useState<number | null>(null);
+  const [editTodoTitle, setEditTodoTitle] = useState<string>("");
+
+  const handleAddTodo = () => {
+    if (newTodo.trim() !== "") {
+      setTodos((prevTodos) => [
+        ...prevTodos,
+        { id: Date.now(), title: newTodo, completed: false },
+      ]);
+      setNewTodo("");
+    }
+  };
+
+  const handleUpdateTodo = (
+    id: number,
+    updates: { title?: string; completed?: boolean }
+  ) => {
+    setTodos((prevTodos) =>
+      prevTodos.map((todo) => (todo.id === id ? { ...todo, ...updates } : todo))
+    );
+    setEditingTodoId(null);
+    setEditTodoTitle("");
+  };
+
+  const handleEditTodo = (id: number, title: string) => {
+    setEditingTodoId(id);
+    setEditTodoTitle(title);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTodoId(null);
+    setEditTodoTitle("");
+  };
+
+  const handleDeleteTodo = (id: number) => {
+    setTodos((prevTodos) => prevTodos.filter((todo) => todo.id !== id));
+  };
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="flex flex-row w-screen">
+      <div className="w-1/2 mt-10 ">
+        <ClockComponent></ClockComponent>
+      </div>
+      <div className="w-1/2  border-red-100 flex justify-center ">
+        <div className="h-5 mt-20">
+          <input
+            type="text"
+            placeholder="Enter your task here"
+            value={newTodo}
+            onChange={(e) => setNewTodo(e.target.value)}
+            className="w-64 h-10 rounded-full border border-black p-2"
+          />
+
+          <button
+            className="w-15 h-10 rounded-full p-2 bg-gray-400 hover:bg-gray-800 ml-1"
+            onClick={handleAddTodo}
           >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+            Submit
+          </button>
+          <ul>
+            {todos.map((todo) => (
+              <li key={todo.id}>
+                {editingTodoId === todo.id ? (
+                  <>
+                    <div className="flex flex-row">
+                      <input
+                        type="text"
+                        value={editTodoTitle}
+                        onChange={(e) => setEditTodoTitle(e.target.value)}
+                        className="w-64 h-10 rounded-full border border-gray-300 p-2"
+                      />
+                      <button
+                        onClick={() =>
+                          handleUpdateTodo(todo.id, { title: editTodoTitle })
+                        }
+                        className="flex items-center justify-center p-2 w-10 h-10 bg-gray-400 rounded-full border transition duration-300 hover:bg-gray-300 text-black-500"
+                      >
+                        <FontAwesomeIcon icon={faFloppyDisk} />
+                      </button>
+                      <button
+                        onClick={handleCancelEdit}
+                        className="flex items-center justify-center p-2 w-10 h-10 bg-gray-400 rounded-full border transition duration-300 hover:bg-gray-300 text-black-500"
+                      >
+                        <FontAwesomeIcon icon={faXmark} />
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex flex-row py-1 mt-5">
+                      <div className="flex items-center ps-3">
+                        <input
+                          type="checkbox"
+                          checked={todo.completed}
+                          onChange={() =>
+                            handleUpdateTodo(todo.id, {
+                              completed: !todo.completed,
+                            })
+                          }
+                          id={`todo-${todo.id}`}
+                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                        />
+                        <label
+                          htmlFor="react-checkbox-list"
+                          className="w-full py-3 ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+                        ></label>
+                      </div>
+                      <div className="w-59 h-10 rounded-full border p-2 bg-gray-300">
+                        {todo.title}
+                      </div>
+
+                      <button
+                        onClick={() => handleEditTodo(todo.id, todo.title)}
+                        className="flex items-center justify-center p-2 w-10 h-10 bg-gray-400 rounded-full border transition duration-300 hover:bg-blue-300 text-black-500"
+                      >
+                        <FontAwesomeIcon icon={faEdit} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteTodo(todo.id)}
+                        className="flex items-center justify-center p-2 w-10 h-10 bg-gray-400 rounded-full border transition duration-300 hover:bg-red-300 text-red-500"
+                      >
+                        <FontAwesomeIcon icon={faTrash} />
+                      </button>
+                    </div>
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
-
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-full sm:before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full sm:after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50 text-balance`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+    </div>
   );
-}
+};
+
+export default TodoList;
